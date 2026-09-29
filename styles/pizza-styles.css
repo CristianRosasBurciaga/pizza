@@ -1,0 +1,20 @@
+body {
+    background-color: rgb(236, 142, 142);
+    margin: 0; 
+    font-family: 'Arial, Helvetica, sans-serif';
+}
+
+#main {
+    background-color: white;
+    width: 70%;
+    margin: 0 auto;
+    padding: 0 1rem 2rem 1rem;
+}
+
+#header {
+    background-color: rgb(243, 241, 241);
+    border-radius: .25 rem;
+    padding: 2rem 1rem;
+    margin-bottom: 2rem; 
+
+}

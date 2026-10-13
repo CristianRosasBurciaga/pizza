@@ -18,7 +18,7 @@ body {
 #header {
     
     background-color: rgb(231, 231, 231);
-    border-radius: .25 rem;
+    border-radius: .25rem;
     padding: 2rem 1rem;
     margin-bottom: 2rem; 
 
@@ -45,10 +45,38 @@ body {
     font-size: 1rem;
 }
 
-input[type="text"], input[type="email"] {
+input[type="text"], input[type="email"], select, textarea{
     width: 100%;
     border: 1px solid darkgreen;
     border-radius: .25rem;
     margin: 0rem 0rem 1rem 0rem;
     padding: .75rem;
+}
+
+legend {
+    color: darkgreen;
+    font-variant: small-caps;
+    font-size: 1.5rem;
+    padding-left: 1rem;
+    width: 100%;
+}
+
+fieldset {
+    border: 1px solid darkgreen;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+#topping label {
+    display: block;
+    padding-bottom: 0.4rem;
+}
+
+textarea {
+    resize: none;
+}
+
+.err {
+    color: red;
+    display: none;
 }

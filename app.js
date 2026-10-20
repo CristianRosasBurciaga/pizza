@@ -10,20 +10,28 @@ const PORT = 3000;
 //Enable static file serving
 app.use(express.static('public'));
 
+// Add "middleware" to allow the app to parse form data 
+//access form data through req.body
+app.use(express.urlencoded({extended: true}))
+
 //Defining default root ("/")
 app.get('/', (req, res) => {
    //res.send('Welcome to Pizza :)');
    res.sendFile(`${import.meta.dirname}/views/home.html`);
 });
 
-// Add a contact route to display a contact view page
+//Add a contact route to display a contact view page
 app.get('/contact', (req, res) => {
     res.sendFile(`${import.meta.dirname}/views/contact.html`);
 })
 
+app.get('/test', (req, res) => {
+    res.send("this is a test");
+})
+
 // Addan order number confrmation route
 app.get('/confirm-order', (req, res) => {
-    res.sendFile(`${import.meta.dirname}/views/confirm.html`);
+    res.sendFile(`${import.meta.dirname}/views/confirm.html`)
 })
 
 //Create an array to store our orders
@@ -46,11 +54,7 @@ app.post('/submit-order', (req, res) => {
 
     //Display the confirmation page
     res.sendFile(`${import.meta.dirname}/views/confirm.html`);
-})
-
-// Add "middleware" to allow the app to parse form data 
-//access form data through req.body
-app.use(express.urlencoded({extended: true}))
+});
 
 //Start server on the designated PORT
 app.listen(PORT, () => {

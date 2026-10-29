@@ -14,25 +14,32 @@ app.use(express.static('public'));
 //access form data through req.body
 app.use(express.urlencoded({extended: true}))
 
+//Set view engine to EJS
+app.set('view engine', 'ejs');
+
 //Defining default root ("/")
 app.get('/', (req, res) => {
-   //res.send('Welcome to Pizza :)');
-   res.sendFile(`${import.meta.dirname}/views/home.html`);
+    //res.send('Welcome to Pizza :)');
+    //res.sendFile(`${import.meta.dirname}/views/home.html`);
+    //changed code above to res.render
+    res.render('home');
 });
 
 //Add a contact route to display a contact view page
 app.get('/contact', (req, res) => {
-    res.sendFile(`${import.meta.dirname}/views/contact.html`);
+    // res.sendFile(`${import.meta.dirname}/views/contact.html`);
+    res.render('contact');
 })
 
 app.get('/test', (req, res) => {
     res.send("this is a test");
 })
 
-// Addan order number confrmation route
-app.get('/confirm-order', (req, res) => {
-    res.sendFile(`${import.meta.dirname}/views/confirm.html`)
-})
+// Add an order number confrmation route
+// app.get('/confirm-order', (req, res) => {
+//     // res.sendFile(`${import.meta.dirname}/views/confirm.html`)
+//     res.render('confirm');
+// })
 
 //Create an array to store our orders
 const orders = []; 
@@ -53,12 +60,13 @@ app.post('/submit-order', (req, res) => {
     console.log(orders)
 
     //Display the confirmation page
-    res.sendFile(`${import.meta.dirname}/views/confirm.html`);
+    // res.sendFile(`${import.meta.dirname}/views/confirm.html`);
+    res.render('confirm', {order});
 });
 
 //Add an admin route
 app.get('/admin', (req, res) => {
-    res.send(orders);
+    res.render('admin', {orders});
 })
 
 //Start server on the designated PORT

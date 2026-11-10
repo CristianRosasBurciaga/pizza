@@ -1,6 +1,33 @@
 //Import the express module
 import express from 'express';
 
+// Import the mysql2 module
+// mysql2 allows Node.js to communicate with a MySQL database
+import mysql2 from 'mysql2';
+
+//Import .env
+import dotenv from 'dotenv';
+dotenv.config();
+/* ==================== DATABASE CONNECTION POOL ====================
+
+
+ * Create a CONNECTION POOL to the database
+ * A "pool" is like a bucket of ready-to-use database connections.
+ * Instead of creating a new connection every time we need to talk
+ * to the database (which is slow), we create several connections
+ * upfront and reuse them. This makes our app much faster.
+ * 
+ * .promise() converts the pool to use modern JavaScript Promises
+ * This allows us to use 'async/await' syntax which simplifies our code.
+ */
+const pool = mysql2.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT
+}).promise();
+
 //Create an instance of an express application
 const app = express();
 
@@ -17,6 +44,17 @@ app.use(express.urlencoded({extended: true}))
 //Set view engine to EJS
 app.set('view engine', 'ejs');
 
+app.get('/db-test', async(req,res) => {
+
+    try {
+        const orders = await pool.query('SELECT * FROM orders')
+        res.send(orders[0]);
+    } catch(err) {
+        console.error('Database err: ', err);
+        res.status(500).send('Database error occured.')
+    } 
+});
+ 
 //Defining default root ("/")
 app.get('/', (req, res) => {
     //res.send('Welcome to Pizza :)');
@@ -45,19 +83,29 @@ app.get('/test', (req, res) => {
 const orders = []; 
 
 //Add a route to process a pizza order
-app.post('/submit-order', (req, res) => {
+app.post('/submit-order', async(req, res) => {
 
     //Create a JSON object to store order data
     const order = req.body;
-    order['timestamp'] = new Date();
-
-
     console.log(order);
 
-    //Add order objects to orders array
+    //Define an SQL query to INSERT new order
+    const sql = `INSERT INTO orders (fname, lname, email, size, method, toppings, comment)
+                VALUES(?, ?, ?, ?, ?, ?, ?)`;
 
-    orders.push(order);
-    console.log(orders)
+    //Create an array of parameters form order data
+    const params = [
+        order.fname,
+        order.lname,
+        order.email,
+        order.size,
+        order.method,
+        order.toppings,
+        order.comment,
+    ];
+
+    //Execute the query
+    const [result] = await pool.execute(sql, params)
 
     //Display the confirmation page
     // res.sendFile(`${import.meta.dirname}/views/confirm.html`);
@@ -65,9 +113,16 @@ app.post('/submit-order', (req, res) => {
 });
 
 //Add an admin route
-app.get('/admin', (req, res) => {
-    res.render('admin', {orders});
-})
+app.get('/admin', async(req, res) => {
+    try {
+        const orders = await pool.query('SELECT * FROM orders')
+        console.log(orders[0]);
+        res.render('admin', {orders:orders[0]});
+    } catch(err) {
+        console.error('Database err: ', err);
+        res.status(500).send('Database error occured.')
+    } 
+});
 
 //Start server on the designated PORT
 app.listen(PORT, () => {

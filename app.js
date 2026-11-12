@@ -44,16 +44,17 @@ app.use(express.urlencoded({extended: true}))
 //Set view engine to EJS
 app.set('view engine', 'ejs');
 
-app.get('/db-test', async(req,res) => {
+//TEST CODE
+// app.get('/db-test', async(req,res) => {
 
-    try {
-        const orders = await pool.query('SELECT * FROM orders')
-        res.send(orders[0]);
-    } catch(err) {
-        console.error('Database err: ', err);
-        res.status(500).send('Database error occured.')
-    } 
-});
+//     try {
+//         const [orders] = await pool.query('SELECT * FROM orders')
+//         res.send(orders);
+//     } catch(err) {
+//         console.error('Database err: ', err);
+//         res.status(500).send('Database error occured.')
+//     } 
+// });
  
 //Defining default root ("/")
 app.get('/', (req, res) => {
@@ -87,8 +88,13 @@ app.post('/submit-order', async(req, res) => {
 
     //Create a JSON object to store order data
     const order = req.body;
+    order.timestamp = new Date();
     console.log(order);
 
+    //Convert toppings array ti a comma-delimited string
+    order.toppings = Array.isArray(order.toppings) ?
+    order.toppings.join(", ") : "";
+    
     //Define an SQL query to INSERT new order
     const sql = `INSERT INTO orders (fname, lname, email, size, method, toppings, comment)
                 VALUES(?, ?, ?, ?, ?, ?, ?)`;
@@ -105,7 +111,11 @@ app.post('/submit-order', async(req, res) => {
     ];
 
     //Execute the query
-    const [result] = await pool.execute(sql, params)
+    const [result] = await pool.execute(sql, params);
+
+    //Get the id from the newly inserted row
+    order.id = result.insertId;
+    console.log("A new row was inserted with ID: " + order.id);
 
     //Display the confirmation page
     // res.sendFile(`${import.meta.dirname}/views/confirm.html`);
@@ -115,9 +125,9 @@ app.post('/submit-order', async(req, res) => {
 //Add an admin route
 app.get('/admin', async(req, res) => {
     try {
-        const orders = await pool.query('SELECT * FROM orders')
+        const [orders] = await pool.query('SELECT * FROM orders ORDER BY timestamp DESC')
         console.log(orders[0]);
-        res.render('admin', {orders:orders[0]});
+        res.render('admin', {orders});
     } catch(err) {
         console.error('Database err: ', err);
         res.status(500).send('Database error occured.')

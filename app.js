@@ -8,6 +8,10 @@ import mysql2 from 'mysql2';
 //Import .env
 import dotenv from 'dotenv';
 dotenv.config();
+
+//Import express-session
+import session from 'express-session';
+
 /* ==================== DATABASE CONNECTION POOL ====================
 
 
@@ -41,12 +45,26 @@ app.use(express.static('public'));
 //access form data through req.body
 app.use(express.urlencoded({extended: true}))
 
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 1000 * 60 * 60}
+}));
+
+function requireLogin(req, res, next) {
+    if(req.session.loggedIn) {
+        next();
+    } else {
+        res.redirect('/login');
+    }
+}
+
 //Set view engine to EJS
 app.set('view engine', 'ejs');
 
 //TEST CODE
-// app.get('/db-test', async(req,res) => {
-
+// app.get('/db-test', async(req, res) => {
 //     try {
 //         const [orders] = await pool.query('SELECT * FROM orders')
 //         res.send(orders);
@@ -70,18 +88,42 @@ app.get('/contact', (req, res) => {
     res.render('contact');
 })
 
-app.get('/test', (req, res) => {
-    res.send("this is a test");
-})
-
-// Add an order number confrmation route
-// app.get('/confirm-order', (req, res) => {
-//     // res.sendFile(`${import.meta.dirname}/views/confirm.html`)
-//     res.render('confirm');
-// })
+//Login page route
+//We pass error: null
+app.get('/login', (req, res) => {
+    res.render('login', {error: null});
+});
 
 //Create an array to store our orders
 const orders = []; 
+
+app.post('/login', (req, res) => {
+    //Get the values the user typed into the form
+    const username = req.body.username;
+    const password = req.body.password;
+
+    //Compare them to the username and password store in .env
+    if(username === process.env.ADMIN_USER &&
+        password === process.env.ADMIN_PASSWORD) {
+
+            //Correct! Remember that this user is logged in
+            req.session.loggedIn = true;
+
+            //Send them to the admin page
+            res.redirect('/admin');
+        } else {
+            //Wrong username or password - show the form again with
+            //Note: we don't say WHICH one was wrong.
+
+            res.render('login', { error: 'Invalid username or password' });
+        }
+    });
+
+app.get('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.redirect('/login');
+    });
+});
 
 //Add a route to process a pizza order
 app.post('/submit-order', async(req, res) => {
@@ -94,7 +136,7 @@ app.post('/submit-order', async(req, res) => {
     //Convert toppings array ti a comma-delimited string
     order.toppings = Array.isArray(order.toppings) ?
     order.toppings.join(", ") : "";
-    
+
     //Define an SQL query to INSERT new order
     const sql = `INSERT INTO orders (fname, lname, email, size, method, toppings, comment)
                 VALUES(?, ?, ?, ?, ?, ?, ?)`;
@@ -123,7 +165,7 @@ app.post('/submit-order', async(req, res) => {
 });
 
 //Add an admin route
-app.get('/admin', async(req, res) => {
+app.get('/admin', requireLogin, async(req, res) => {
     try {
         const [orders] = await pool.query('SELECT * FROM orders ORDER BY timestamp DESC')
         console.log(orders[0]);

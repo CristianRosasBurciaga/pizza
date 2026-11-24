@@ -20,7 +20,13 @@
             <p>We make the best pizza ever. Visit us today.</p>
             <a id="contact-button" href="/contact" role="button">Contact us</a>
         </div>
-        
+
+        <!-- Display server-side error messages -->
+        <% if(errors) { %>
+            <% errors.forEach(error => {%>
+                <p><% error %></p> 
+            <% }) %>
+        <% } %> 
         <form id="pizza-form" action="/submit-order" method="post">
 
             <!-- Contact Info -->

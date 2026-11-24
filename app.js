@@ -12,6 +12,9 @@ dotenv.config();
 //Import express-session
 import session from 'express-session';
 
+//Import server-side validation function
+import {validateForm} from './validation.js'
+
 /* ==================== DATABASE CONNECTION POOL ====================
 
 
@@ -132,6 +135,14 @@ app.post('/submit-order', async(req, res) => {
     const order = req.body;
     order.timestamp = new Date();
     console.log(order);
+
+    //Validate data on the server 
+    const valid = validateForm(order);
+    if(!valid.isValid) {
+        console.log(valid);
+        res.render('home', {errors: valid.errors});
+        return;
+    }
 
     //Convert toppings array ti a comma-delimited string
     order.toppings = Array.isArray(order.toppings) ?
